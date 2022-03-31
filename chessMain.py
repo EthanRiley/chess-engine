@@ -3,8 +3,8 @@ Driver file, handles user input and displays position
 '''
 
 from tkinter.tix import MAX
-import pygame as p
 import chessEngine
+import pygame as p
 
 WIDTH = HEIGHT = 512
 DIMENSION = 8
@@ -16,7 +16,7 @@ IMAGES = {}
 Initialize global directory of images
 '''
 def load_images():
-    pieces = ['wp', 'wR', 'wN', 'wB', 'wQ', 'wL', 'bp', 'bR', 'bN', 'bB', 'bQ', 'bL']
+    pieces = ['wp', 'wR', 'wN', 'wB', 'wQ', 'wK', 'bp', 'bR', 'bN', 'bB', 'bQ', 'bK']
     for piece in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load('images/' + piece + '.png'), (SQ_SIZE, SQ_SIZE))
 
@@ -32,10 +32,12 @@ def main():
     running =True
     while running:
         for e in p.event.get():
-            if e.type == p.QUIT():
+            if e.type == p.QUIT:
                 running = False
-            clock.tick(MAX_FPS)
-            p.display.flip()
+        drawGameState(screen, gs)
+        clock.tick(MAX_FPS)
+        p.display.flip()
+        
 
 def drawGameState(screen, gs):
     '''
@@ -44,12 +46,12 @@ def drawGameState(screen, gs):
     drawBoard(screen)
     drawPieces(screen, gs.board)
 
-def drawBoard(scren):
+def drawBoard(screen):
     colors = [p.Color('white'), p.Color('dark green')]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[((r+c)%2)]
-            p.draw.rect(screen, color, p.Rect(c*SQ_SIZE, r*SQ_SIZE))
+            p.draw.rect(screen, color, p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 def drawPieces(screen, board):
     for r in range(DIMENSION):
@@ -57,3 +59,5 @@ def drawPieces(screen, board):
             piece = board[r][c]
             if piece != '--':
                 screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
+main()
