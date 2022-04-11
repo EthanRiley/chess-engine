@@ -146,7 +146,7 @@ class GameState():
         tempCastleRights = CastleRights(self.currentCastlingRight.wks, self.currentCastlingRight.bks,
                                         self.currentCastlingRight.wqs, self.currentCastlingRight.bqs)
         #1) Generate all possible moves
-        moves = self.getAllPossibleMoves()
+        moves, pieces = self.getAllPossibleMoves()
         if self.whiteToMove:
             self.getCastleMoves(self.whiteKingLocation[0], self.whiteKingLocation[1], moves)
         else:
@@ -162,7 +162,7 @@ class GameState():
             self.whiteToMove = not self.whiteToMove
             self.undoMove()
         #5) if they do attack your king, not a valid move
-        if len(moves) == 0:
+        if len(moves) == 0 or len(pieces) == 2:
             if self.inCheck():
                 self.checkmate = True
             else:
@@ -183,7 +183,7 @@ class GameState():
 
     def squareUnderAttack(self, r, c):
         self.whiteToMove = not self.whiteToMove
-        oppMoves = self.getAllPossibleMoves()
+        oppMoves = self.getAllPossibleMoves()[0]
         self.whiteToMove = not self.whiteToMove
         for move in oppMoves:
             if move.endRow == r and move.endCol == c:
@@ -192,8 +192,11 @@ class GameState():
 
     def getAllPossibleMoves(self):
         moves = []
+        pieces = []
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
+                if self.board[r][c] != '--':
+                    pieces.append(self.board[r][c])
                 team = self.board[r][c][0]
                 if (team == 'w' and self.whiteToMove) or (team == 'b' and not self.whiteToMove):
                     piece = self.board[r][c][1]
@@ -209,40 +212,44 @@ class GameState():
                         self.getQueenMoves(r, c, moves)
                     elif piece == 'K':
                         self.getKingMoves(r, c, moves)
-        return moves    
+        return moves, pieces    
 
     def getPawnMoves(self, r, c, moves):
-        if self.whiteToMove:
-            if self.board[r-1][c] == "--":
-                moves.append(Move((r, c), (r-1, c), self.board))
-                if self.board[r-2][c] == "--" and r == 6:
-                    moves.append(Move((r, c), (r-2, c), self.board))
-            if c-1 >= 0: 
-                if self.board[r-1][c-1][0] == 'b':
-                    moves.append(Move((r, c), (r-1, c-1), self.board))
-                elif (r-1, c-1) == self.enpassantPossible:
-                    moves.append(Move((r, c), (r-1, c-1), self.board, isEnpassantMove=True))
-            if c+1 <= 7:
-                if self.board[r-1][c+1][0] == 'b':
-                    moves.append(Move((r, c), (r-1, c+1), self.board))
-                elif (r-1, c+1) == self.enpassantPossible:
-                    moves.append(Move((r, c), (r-1, c+1), self.board, isEnpassantMove=True))
-        
-        elif not self.whiteToMove:
-            if self.board[r+1][c] == "--":
-                moves.append(Move((r, c), (r+1, c), self.board))
-                if self.board[r+2][c] == "--" and r == 1:
-                    moves.append(Move((r, c), (r+2, c), self.board))
-            if c-1 >= 0:
-                if self.board[r+1][c-1][0] == 'w':
-                    moves.append(Move((r, c), (r+1, c-1), self.board))
-                elif (r+1, c-1) == self.enpassantPossible:
-                    moves.append(Move((r, c), (r+1, c-1), self.board, isEnpassantMove=True))
-            if c+1 <= 7:
-                if self.board[r+1][c+1][0] == 'w':
-                    moves.append(Move((r, c), (r+1, c+1), self.board))
-                elif (r+1, c+1) == self.enpassantPossible:
-                    moves.append(Move((r, c), (r+1, c+1), self.board, isEnpassantMove=True))
+        if self.whiteToMove:  # white pawn move
+            if self.board[r - 1][c] == "--":  # the square in front of a pawn is empty
+                # startSquare, endSquare, board
+                moves.append(Move((r, c), (r - 1, c), self.board))
+                # check if it possible to advance to squares in the first move
+                if r == 6 and self.board[r - 2][c] == "--":
+                    moves.append(Move((r, c), (r - 2, c), self.board))
+            if c - 1 >= 0:  # don't go outside the board from the left :)
+                if (self.board[r - 1][c - 1][0] == "b"):  # there's an enemy piece to capture
+                    moves.append(Move((r, c), (r - 1, c - 1), self.board))
+                elif (r - 1, c - 1) == self.enpassantPossible:
+                    moves.append(Move((r, c), (r - 1, c - 1), self.board, isEnpassantMove=True))
+            if c + 1 <= 7:  # don't go outside the board from the right :)
+                if (self.board[r - 1][c + 1][0] == "b"):  # there's an enemy piece to capture
+                    moves.append(Move((r, c), (r - 1, c + 1), self.board))
+                elif (r - 1, c + 1) == self.enpassantPossible:
+                    moves.append(Move((r, c), (r - 1, c + 1), self.board, isEnpassantMove=True))
+
+        else:  # black pawn move
+            if self.board[r + 1][c] == "--":  # the square in front of a pawn is empty
+                # startSquare, endSquare, board
+                moves.append(Move((r, c), (r + 1, c), self.board))
+                # check if it possible to advance to squares in the first move
+                if r == 1 and self.board[r + 2][c] == "--":
+                    moves.append(Move((r, c), (r + 2, c), self.board))
+            if c - 1 >= 0:  # don't go outside the board from the left :)
+                if (self.board[r + 1][c - 1][0] == "w"):  # there's an enemy piece to capture
+                    moves.append(Move((r, c), (r + 1, c - 1), self.board))
+                elif (r + 1, c - 1) == self.enpassantPossible:
+                    moves.append(Move((r, c), (r + 1, c - 1), self.board, isEnpassantMove=True))
+            if c + 1 <= 7:  # don't go outside the board from the right :)
+                if (self.board[r + 1][c + 1][0] == "w"):  # there's an enemy piece to capture
+                    moves.append(Move((r, c), (r + 1, c + 1), self.board))
+                elif (r + 1, c + 1) == self.enpassantPossible:
+                    moves.append(Move((r, c), (r + 1, c + 1), self.board, isEnpassantMove=True))
 
     def getRookMoves(self, r, c, moves):
         directions = ((-1, 0), (0, -1), (1, 0), (0,1))
@@ -321,7 +328,7 @@ class GameState():
                 moves.append(Move((r, c), (r, c+2), self.board, isCastleMove=True))
 
     def getQueenSideCastleMoves(self, r, c, moves):
-        if self.board[r][c-1] == '--' and self.board[r][c-2] and self.board[r][c-3]:
+        if self.board[r][c-1] == '--' and self.board[r][c-2] == '--' and self.board[r][c-3] == '--':
             if not self.squareUnderAttack(r, c-1) and not self.squareUnderAttack(r, c-2):
                 moves.append(Move((r, c), (r, c-2), self.board, isCastleMove=True))
 
