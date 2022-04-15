@@ -85,7 +85,7 @@ def main():
                     gameOver = False
         # AI Movefinder
         if not gameOver and not humanTurn:
-            AIMove = oreoChess.findBestMove(gs,validMoves)
+            AIMove = oreoChess.findBestMoveMinMax(gs,validMoves)
             if AIMove is None:
                 AIMove = oreoChess.findRandomMove(validMoves)
             gs.makeMove(AIMove)
