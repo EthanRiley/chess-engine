@@ -38,7 +38,7 @@ def main():
     playerClicks = [] # keeps track of player clicks (two tuples: eg. [(6, 4), [4, 4]])
     gameOver = False
     playerOne = True
-    playerTwo = True
+    playerTwo = False
     while running:
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
         for e in p.event.get():
@@ -85,7 +85,7 @@ def main():
                     gameOver = False
         # AI Movefinder
         if not gameOver and not humanTurn:
-            AIMove = oreoChess.findRandomMove(validMoves)
+            AIMove = oreoChess.findBestMove(gs,validMoves)
             if AIMove is None:
                 AIMove = oreoChess.findRandomMove(validMoves)
             gs.makeMove(AIMove)
