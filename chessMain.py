@@ -33,12 +33,12 @@ def main():
     validMoves = gs.getValidMoves()
     moveMade = False # flag variable for when a move is made
     load_images()
-    running =True
+    running = True
     sqSelected = () # will keep track of last click of the user
     playerClicks = [] # keeps track of player clicks (two tuples: eg. [(6, 4), [4, 4]])
     gameOver = False
-    playerOne = True
-    playerTwo = False
+    playerOne = False
+    playerTwo = True
     while running:
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
         for e in p.event.get():
@@ -85,7 +85,7 @@ def main():
                     gameOver = False
         # AI Movefinder
         if not gameOver and not humanTurn:
-            AIMove = oreoChess.findBestMoveMinMax(gs,validMoves)
+            AIMove = oreoChess.findBestMove(gs, validMoves)
             if AIMove is None:
                 AIMove = oreoChess.findRandomMove(validMoves)
             gs.makeMove(AIMove)

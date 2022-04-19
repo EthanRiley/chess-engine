@@ -3,21 +3,22 @@ import random as rnd
 pieceScore = {"K": 0, "Q": 9, "R": 5, "N": 3, "B": 3, "p": 1}
 CHECKMATE = float('inf')
 STALEMATE = 0
-DEPTH = 2
+DEPTH = 3
 
 
 class OreoChess:
 
-
     def findRandomMove(self, validMoves):
-        return validMoves[rnd.randint(0, len(validMoves)-1)]
+        return validMoves[rnd.randint(0, len(validMoves) - 1)]
 
     def findBestMove(validMoves):
         pass
 
-def findRandomMove(validMoves):
-    return validMoves[rnd.randint(0, len(validMoves)-1)]
 
+def findRandomMove(validMoves):
+    return validMoves[rnd.randint(0, len(validMoves) - 1)]
+
+# Min max without recursion
 def findGreedyMove(gs, validMoves):
     turnMultiplier = 1 if gs.whiteToMove else -1
     opponentMinMaxScore = CHECKMATE
@@ -44,37 +45,45 @@ def findGreedyMove(gs, validMoves):
         gs.undoMove()
     return bestResponse
 
-def findBestMoveMinMax(gs, validMoves):
+
+def findBestMove(gs, validMoves):
     '''
-    Helper method to amke first recursive call
+    Helper method to make first recursive call
     '''
-    global nextMove
+    global nextMove, counter
     nextMove = None
-    findMinMaxMove(gs, validMoves, DEPTH, gs.whiteToMove)
+    rnd.shuffle(validMoves)
+    counter = 0
+    # findMinMaxMove(gs, validMoves, DEPTH, gs.whiteToMove)
+    # findMoveNegamax(gs, validMoves, DEPTH, 1 if gs.whiteToMove else -1)
+    findMoveNegamaxAlphaBeta(gs, validMoves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gs.whiteToMove else -1)
+    print(counter)
     return nextMove
+
 
 def findMinMaxMove(gs, validMoves, depth, whiteToMove):
     global nextMove
     if depth == 0:
-        return scoreBoard(gs)
+        return scoreMaterial(gs)
     if whiteToMove:
         maxScore = -CHECKMATE
         for move in validMoves:
             gs.makeMove(move)
             nextMoves = gs.getValidMoves()
-            score = findMinMaxMove(gs, nextMoves, depth -1, False)
+            score = findMinMaxMove(gs, nextMoves, depth - 1, False)
             if score > maxScore:
                 maxScore = score
                 if depth == DEPTH:
                     nextMove = move
             gs.undoMove()
         return maxScore
+
     else:
         minScore = CHECKMATE
         for move in validMoves:
             gs.makeMove(move)
             nextMoves = gs.getValidMoves()
-            score = findMinMaxMove(gs, nextMoves, depth -1, True)
+            score = findMinMaxMove(gs, nextMoves, depth - 1, True)
             if score < minScore:
                 minScore = score
                 if depth == DEPTH:
@@ -83,14 +92,48 @@ def findMinMaxMove(gs, validMoves, depth, whiteToMove):
         return minScore
 
 
-    # OpponentMinMax score placeholder
-    # for move in valid moves
-    # Make all the moves
-    # For each move make all the opponents moves
-    # Find best move
-    # Recur for each depth
+def findMoveNegamax(gs, validMoves, depth, turnMultiplier):
+    global nextMove
+    if depth == 0:
+        return turnMultiplier * scoreBoard(gs)
 
-    
+    maxScore = -CHECKMATE
+    for move in validMoves:
+        gs.makeMove(move)
+        nextMoves = gs.getValidMoves()
+        score = -findMoveNegamax(gs, nextMoves, depth - 1, -turnMultiplier)
+        if score > maxScore:
+            maxScore = score
+            if depth == DEPTH:
+                nextMove = move
+        gs.undoMove()
+    return maxScore
+
+
+def findMoveNegamaxAlphaBeta(gs, validMoves, depth, alpha, beta, turnMultiplier):
+    global nextMove, counter
+    counter += 1
+    if depth == 0:
+        return turnMultiplier * scoreBoard(gs)
+
+    # Implementing move ordering later to increase efficiency
+
+    maxScore = -CHECKMATE
+    for move in validMoves:
+        gs.makeMove(move)
+        nextMoves = gs.getValidMoves()
+        score = -findMoveNegamaxAlphaBeta(gs, nextMoves, depth - 1, -beta, -alpha, -turnMultiplier)
+        if score > maxScore:
+            maxScore = score
+            if depth == DEPTH:
+                nextMove = move
+        gs.undoMove()
+        if maxScore > alpha:  # pruning happens here
+            alpha = maxScore
+        if alpha >= beta:
+            break
+    return maxScore
+
 
 def scoreBoard(gs):
     if gs.checkmate:
@@ -115,6 +158,8 @@ def scoreBoard(gs):
 '''
 Score the board based on material
 '''
+
+
 def scoreMaterial(board):
     score = 0
     for row in board:
@@ -125,4 +170,3 @@ def scoreMaterial(board):
                 score -= pieceScore[square[1]]
 
     return score
-
