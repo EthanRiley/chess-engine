@@ -42,6 +42,7 @@ def main():
     gameOver = False
     playerOne = True #If a Human is playing white, then this will be True. If an AI is playing, then false.
     playerTwo = False # If a Human is playing black, then this will be True. If an AI is playing, then false.
+
     while running:
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
         for e in p.event.get():
