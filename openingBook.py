@@ -23,33 +23,25 @@ class Repetoir:
 
 
     @staticmethod
-    def chessToComputer(self, startSq, endSq):
+    def chessToComputer(startSq, endSq):
         ranksToRows = {'1': 7, '2': 6, '3': 5, '4': 4, 
                     '5': 3, '6': 2, '7': 1, '8': 0}
         filesToCols = {'a': 0, 'b': 1, 'c': 2, 'd': 3,
                     'e': 4, 'f': 5, 'g': 6, 'h':7}
-        return ((ranksToRows[startSq[1]], filesToCols[startSq[0]]), (self.ranksToRows[endSq[1]], self.filesToCols[endSq[0]]))
+        return ((ranksToRows[startSq[1]], filesToCols[startSq[0]]), (ranksToRows[endSq[1]], filesToCols[endSq[0]]))
 
     def makeMove(self, move):
         self.board[move.startRow][move.startCol] = '--'
         self.board[move.endRow][move.endCol] = move.pieceMoved
     
-    def add_position_response(self, board, move_tuple):
-        self.myRepetoir[Repetoir.pos_to_key(board)] = (Repetoir.chessToComputer(move_tuple[0], move_tuple[1]))
+    def add_position_response(self, board, move_tuple, isCastleMove=False, isEnPassantMove=False):
+        self.myRepetoir[Repetoir.pos_to_key(board)] = (Repetoir.chessToComputer(move_tuple[0], move_tuple[1]), isCastleMove, isEnPassantMove)
 
+e4 = Repetoir()
+e4.add_position_response(e4.startPos, (('e2'), ('e4')))
+print(e4.myRepetoir)
 
-
-Italian = Repetoir()
-Italian.add_position_response([
-            ['bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR'],
-            ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
-            ['wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR']], ('e2', 'e4'))
-
+'''
 repetoirItalian = {# 1. e4
             [
             ['bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR'],
@@ -116,3 +108,4 @@ repetoirItalian = {# 1. e4
 }
 
 repetoirItalian = {}
+'''

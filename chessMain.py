@@ -7,6 +7,10 @@ from tkinter.tix import MAX
 import chessEngine
 import pygame as p
 import oreoChess
+from oreoChess import OreoChess
+import openingBook
+
+Oreo = OreoChess(repetoir=openingBook.e4.myRepetoir, depth=2)
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
 MOVE_LOG_PANEL_WIDTH = 250
@@ -40,8 +44,8 @@ def main():
     sqSelected = () # will keep track of last click of the user
     playerClicks = [] # keeps track of player clicks (two tuples: eg. [(6, 4), [4, 4]])
     gameOver = False
-    playerOne = True #If a Human is playing white, then this will be True. If an AI is playing, then false.
-    playerTwo = False # If a Human is playing black, then this will be True. If an AI is playing, then false.
+    playerOne = False #If a Human is playing white, then this will be True. If an AI is playing, then false.
+    playerTwo = True # If a Human is playing black, then this will be True. If an AI is playing, then false.
 
     while running:
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
@@ -89,9 +93,9 @@ def main():
                     gameOver = False
         # AI Movefinder
         if not gameOver and not humanTurn:
-            AIMove = oreoChess.findBestMove(gs, validMoves)
+            AIMove = Oreo.findBestMove(gs, validMoves)
             if AIMove is None:
-                AIMove = oreoChess.findRandomMove(validMoves)
+                AIMove = Oreo.findRandomMove(validMoves)
             gs.makeMove(AIMove)
             moveMade = True
 
