@@ -60,8 +60,11 @@ class GameState():
             self.currentCastlingRight.bqs)]
 
     def makeMove(self, move):
-        self.board[move.startRow][move.startCol] = '--'
-        self.board[move.endRow][move.endCol] = move.pieceMoved
+        '''
+        Moves pieces and handles updates of all logical operators
+        '''
+        self.board[move.startRow][move.startCol] = '--' # Set row where piece moved from to nothing
+        self.board[move.endRow][move.endCol] = move.pieceMoved # Set new square equal to piece moved
         self.moveLog.append(move)
         self.whiteToMove = not self.whiteToMove
         # Update king location if moves
@@ -69,13 +72,13 @@ class GameState():
             self.whiteKingLocation = (move.endRow, move.endCol)
         if move.pieceMoved == 'bK':
             self.blackKingLocation = (move.endRow, move.endCol)
-
+        # If move is a Pawn Promotion then promote to queen (Need to add selection functionality)
         if move.isPawnPromotion:
             self.board[move.endRow][move.endCol] = move.pieceMoved[0] + 'Q'
-
+        # If move was an en passant move then need special logic for clearing squares
         if move.isEnpassantMove:
             self.board[move.startRow][move.endCol] = '--'
-
+        # More logic on en passant 
         if move.pieceMoved[1] == 'p' and abs(move.startRow - move.endRow) == 2:
             self.enpassantPossible = ((move.startRow + move.endRow) // 2, move.startCol)
         else:
@@ -83,11 +86,11 @@ class GameState():
 
         self.enpassantPossibleLog.append(self.enpassantPossible)
 
-        if move.isCastleMove:
-            if move.endCol - move.startCol == 2:
+        if move.isCastleMove: # Unique logic for castle move
+            if move.endCol - move.startCol == 2: # If it is a kingside castle move
                 self.board[move.endRow][move.endCol - 1] = self.board[move.endRow][move.endCol + 1]
                 self.board[move.endRow][move.endCol + 1] = '--'
-            else:
+            else: # Else it is queenside castle move
                 self.board[move.endRow][move.endCol + 1] = self.board[move.endRow][move.endCol - 2]
                 self.board[move.endRow][move.endCol - 2] = '--'
 
@@ -99,10 +102,13 @@ class GameState():
             self.currentCastlingRight.bqs))
 
     def undoMove(self):
+        '''
+        Resets board position based on move log
+        '''
         if len(self.moveLog) != 0:
-            move = self.moveLog.pop()
-            self.board[move.startRow][move.startCol] = move.pieceMoved
-            self.board[move.endRow][move.endCol] = move.pieceCaptured
+            move = self.moveLog.pop() # Pop most recently added move out of the log
+            self.board[move.startRow][move.startCol] = move.pieceMoved # Move piece back
+            self.board[move.endRow][move.endCol] = move.pieceCaptured # Move piece that was just captured back
             self.whiteToMove = not self.whiteToMove
             # Update king's position if necessary
             if move.pieceMoved == 'wK':
@@ -155,18 +161,18 @@ class GameState():
                 elif move.startCol == 7:
                     self.currentCastlingRight.bks = False
 
-                if move.pieceCaptured == 'wR':
-                    if move.endRow == 7:
-                        if move.endCol == 0:
-                            self.currentCastlingRight.wqs = False
-                        elif move.endCol == 7:
-                            self.currentCastlingRight.wks = False
-                elif move.pieceCaptured == 'bR':
-                    if move.endRow == 0:
-                        if move.endCol == 0:
-                            self.currentCastlingRight.bqs = False
-                    elif move.endCol == 7:
-                        self.currentCastlingRight.bks = False
+        if move.pieceCaptured == 'wR':
+            if move.endRow == 7:
+                if move.endCol == 0:
+                    self.currentCastlingRight.wqs = False
+                elif move.endCol == 7:
+                    self.currentCastlingRight.wks = False
+        if move.pieceCaptured == 'bR':
+            if move.endRow == 0:
+                if move.endCol == 0:
+                    self.currentCastlingRight.bqs = False
+                elif move.endCol == 7:
+                    self.currentCastlingRight.bks = False
 
     def getValidMoves(self):
         '''

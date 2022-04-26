@@ -75,14 +75,14 @@ def main():
                         if not moveMade:
                             playerClicks = [sqSelected]
         
-            elif e.type == p.KEYDOWN:
-                if e.key == p.K_z:
+            elif e.type == p.KEYDOWN: # Key press handling
+                if e.key == p.K_z: # Press Z to undo a move
                     gs.undoMove()
                     moveMade = True
                     gs.checkmate = False
                     gs.stalemate = False
                     gameOver = False
-                if e.key == p.K_r:
+                if e.key == p.K_r: # Press R to reset the game
                     gs = chessEngine.GameState()
                     validMoves = gs.getValidMoves()
                     sqSelected = ()
@@ -125,6 +125,9 @@ def drawGameState(screen, gs, validMoves, sqSelected, moveLogFont):
     drawMoveLog(screen, gs, moveLogFont)
 
 def drawBoard(screen):
+    '''
+    Draws board of squares
+    '''
     colors = [p.Color('white'), p.Color('dark green')]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
@@ -132,6 +135,9 @@ def drawBoard(screen):
             p.draw.rect(screen, color, p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 def highlightSquares(screen, gs, validMoves, sqSelected):
+    '''
+    Highlight squares when clicked
+    '''
     if sqSelected != ():
         r, c = sqSelected
         if gs.board[r][c][0] == ('w' if gs.whiteToMove else 'b'):
@@ -145,6 +151,9 @@ def highlightSquares(screen, gs, validMoves, sqSelected):
                     screen.blit(s, (SQ_SIZE*move.endCol, SQ_SIZE*move.endRow))
 
 def drawPieces(screen, board):
+    '''
+    Draw pieces from images folder
+    '''
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             piece = board[r][c]
