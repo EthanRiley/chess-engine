@@ -10,7 +10,7 @@ import oreoChess
 from oreoChess import OreoChess
 import openingBook
 
-Oreo = OreoChess(repetoir=openingBook.e4.myRepetoir, depth=2)
+Oreo = OreoChess(depth=6)
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
 MOVE_LOG_PANEL_WIDTH = 250
@@ -44,7 +44,7 @@ def main():
     sqSelected = () # will keep track of last click of the user
     playerClicks = [] # keeps track of player clicks (two tuples: eg. [(6, 4), [4, 4]])
     gameOver = False
-    playerOne = False #If a Human is playing white, then this will be True. If an AI is playing, then false.
+    playerOne = True #If a Human is playing white, then this will be True. If an AI is playing, then false.
     playerTwo = True # If a Human is playing black, then this will be True. If an AI is playing, then false.
 
     while running:
@@ -52,22 +52,22 @@ def main():
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
-            elif e.type == p.MOUSEBUTTONDOWN:
+            elif e.type == p.MOUSEBUTTONDOWN: # When mouse is clicked
                 if not gameOver and humanTurn:
                     location = p.mouse.get_pos() # (x, y) location of the mouse
                     col = location[0] // SQ_SIZE
                     row = location[1] // SQ_SIZE
-                    if sqSelected == (row, col) or col >= 8:
+                    if sqSelected == (row, col) or col >= 8: # Clear clicks when the same square is clicked
                         sqSelected = ()
                         playerClicks = []
                     else:
-                        sqSelected = (row, col)
-                        playerClicks.append(sqSelected)
+                        sqSelected = (row, col) 
+                        playerClicks.append(sqSelected) # Save click into playerClicks list
                     if len(playerClicks) == 2:
                         move = chessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
                         print(move.getChessNotation())
                         for i in range(len(validMoves)):
-                            if move == validMoves[i]:
+                            if move == validMoves[i]: # Only make move if it is valid
                                 gs.makeMove(validMoves[i])
                                 moveMade = True
                                 sqSelected = ()

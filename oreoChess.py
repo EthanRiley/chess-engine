@@ -143,11 +143,11 @@ class OreoChess:
         nextMove = None
         rnd.shuffle(validMoves)
         counter = 0
-        #board_as_key = Repetoir.pos_to_key(gs.board)
+        board_as_key = Repetoir.pos_to_key(gs.board)
         # findMinMaxMove(gs, validMoves, DEPTH, gs.whiteToMove)
         # findMoveNegamax(gs, validMoves, DEPTH, 1 if gs.whiteToMove else -1)
-        #if board_as_key in self.repetoir:
-            #return Move(self.repetoir[board_as_key][0][0], self.repetoir[board_as_key][0][1], isCastleMove=self.repetoir[board_as_key][1], isEnpassantMove=self.repetoir[board_as_key][2])
+        if board_as_key in self.repetoir:
+            return Move(self.repetoir[board_as_key][0][0], self.repetoir[board_as_key][0][1], gs.board, isCastleMove=self.repetoir[board_as_key][1], isEnpassantMove=self.repetoir[board_as_key][2])
         self.findMoveNegamaxAlphaBeta(gs, validMoves, self.depth, -self.checkmate, self.checkmate, 1 if gs.whiteToMove else -1)
         print(counter, currScore)
         return nextMove
