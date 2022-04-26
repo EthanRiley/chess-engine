@@ -176,7 +176,8 @@ class GameState():
 
     def getValidMoves(self):
         '''
-        Defunct algorithm for making sure illegal moves don't get played
+        Algorithm for checking moves
+        Very slow, first place to make improvements
         '''
         tempEnpassantPossible = self.enpassantPossible
         tempCastleRights = CastleRights(self.currentCastlingRight.wks, self.currentCastlingRight.bks,
@@ -212,12 +213,19 @@ class GameState():
         return moves
 
     def inCheck(self):
+        '''
+        Helper method for determinig if king is in check
+        '''
         if self.whiteToMove:
             return self.squareUnderAttack(self.whiteKingLocation[0], self.whiteKingLocation[1])
         else:
             return self.squareUnderAttack(self.blackKingLocation[0], self.blackKingLocation[1])
 
     def squareUnderAttack(self, r, c):
+        '''
+        Helper method for determining if a square is under attack
+        Used for castling logic
+        '''
         self.whiteToMove = not self.whiteToMove
         oppMoves = self.getAllPossibleMoves()[0]
         self.whiteToMove = not self.whiteToMove
@@ -227,6 +235,10 @@ class GameState():
         return False
 
     def getAllPossibleMoves(self):
+        '''
+        Determines all possible moves before filtering for whether or not your king will be put in check
+        Returns: moves (list), pieces (list)
+        '''
         moves = []
         pieces = []
         for r in range(len(self.board)):
@@ -251,6 +263,9 @@ class GameState():
         return moves, pieces
 
     def getPawnMoves(self, r, c, moves):
+        '''
+        Logic for pawn moves
+        '''
         if self.whiteToMove:  # white pawn move
             if self.board[r - 1][c] == "--":  # the square in front of a pawn is empty
                 # startSquare, endSquare, board
@@ -288,17 +303,20 @@ class GameState():
                     moves.append(Move((r, c), (r + 1, c + 1), self.board, isEnpassantMove=True))
 
     def getRookMoves(self, r, c, moves):
-        directions = ((-1, 0), (0, -1), (1, 0), (0, 1))
-        enemyTeam = 'b' if self.whiteToMove else 'w'
+        '''
+        Logic for rook moves
+        '''
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1)) # Rooks can move up, down, left, and right
+        enemyTeam = 'b' if self.whiteToMove else 'w' # Enemy pieces can be captured so need different logic for enemy pieces and friendly pieces
         for d in directions:
             for i in range(1, 8):
                 endRow = r + d[0] * i
                 endCol = c + d[1] * i
-                if 0 <= endRow < 8 and 0 <= endCol < 8:
+                if 0 <= endRow < 8 and 0 <= endCol < 8: # Make sure move doesn't go off the board
                     endPiece = self.board[endRow][endCol]
-                    if endPiece == "--":
+                    if endPiece == "--": # If square is empty, then its a legal move
                         moves.append(Move((r, c), (endRow, endCol), self.board))
-                    elif endPiece[0] == enemyTeam:
+                    elif endPiece[0] == enemyTeam: # If square has an enemy piece, move can be captured but then must break
                         moves.append(Move((r, c), (endRow, endCol), self.board))
                         break
                     else:
@@ -307,7 +325,11 @@ class GameState():
                     break
 
     def getBishopMoves(self, r, c, moves):
-        directions = ((-1, -1), (-1, 1), (1, -1), (1, 1))
+        '''
+        Logic for Bishop moves
+        Almost identical to Rook moves but directions are different
+        '''
+        directions = ((-1, -1), (-1, 1), (1, -1), (1, 1)) # Bishops move diagonally
         enemyTeam = 'b' if self.whiteToMove else 'w'
         for d in directions:
             for i in range(1, 8):
@@ -326,6 +348,9 @@ class GameState():
                     break
 
     def getKnightMoves(self, r, c, moves):
+        '''
+        Logic for knight moves
+        '''
         jumps = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
         allyTeam = 'w' if self.whiteToMove else 'b'
         for j in jumps:
@@ -337,10 +362,16 @@ class GameState():
                     moves.append(Move((r, c), (endRow, endCol), self.board))
 
     def getQueenMoves(self, r, c, moves):
+        '''
+        Queen just moves like a rook and a bishop combined so no need for any unique code
+        '''
         self.getRookMoves(r, c, moves)
         self.getBishopMoves(r, c, moves)
 
     def getKingMoves(self, r, c, moves):
+        '''
+        Logic for king moves
+        '''
         directions = ((-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
         allyTeam = 'w' if self.whiteToMove else 'b'
         for i in range(8):
@@ -352,6 +383,8 @@ class GameState():
                     moves.append(Move((r, c), (endRow, endCol), self.board))
 
     def getCastleMoves(self, r, c, moves):
+        '''
+        '''
         if self.squareUnderAttack(r, c):
             return
         if (self.whiteToMove and self.currentCastlingRight.wks) or (
@@ -373,6 +406,9 @@ class GameState():
 
 
 class Move():
+    '''
+    Class for handling moves and special move logic like en passant, castling, and promotion are handled here
+    '''
     # Dictionaries for mapping row and column numbers to chess notation
     ranksToRows = {'1': 7, '2': 6, '3': 5, '4': 4,
                    '5': 3, '6': 2, '7': 1, '8': 0}
@@ -389,10 +425,12 @@ class Move():
         self.pieceMoved = board[self.startRow][self.startCol]
         self.pieceCaptured = board[self.endRow][self.endCol]
 
+        # If a pawn makes it the last rank then it promotes
         self.isPawnPromotion = False
         if (self.pieceMoved == 'wp' and self.endRow == 0) or (self.pieceMoved == 'bp' and self.endRow == 7):
             self.isPawnPromotion = True
 
+        # If a move is en passant than piece captured logic must change (it doesn't capture an empty square)
         self.isEnpassantMove = isEnpassantMove
         if self.isEnpassantMove:
             self.pieceCaptured = "wp" if self.pieceMoved == "bp" else "bp"
