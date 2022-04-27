@@ -90,6 +90,3 @@ e4.add_position_response(e4.pos_to_key([['bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN
 
 
 
-print(e4.myRepetoir)
-
-

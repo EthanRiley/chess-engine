@@ -113,6 +113,10 @@ class OreoChess:
         return maxScore
 
     def findGreedyMove(self, gs, validMoves):
+        '''
+        Greedy algorithm
+        Simply evaluates the most material it can take on every move and then does so
+        '''
         turnMultiplier = 1 if gs.whiteToMove else -1
         opponentMinMaxScore = self.checkmate
         bestResponse = None
@@ -140,6 +144,9 @@ class OreoChess:
 
     @staticmethod
     def scoreMaterial(board):
+        '''
+        Board evaluation for greedy. Significantly outclassed by other board evaluation function
+        '''
         score = 0
         for row in board:
             for square in row:
