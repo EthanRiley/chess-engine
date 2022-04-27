@@ -10,7 +10,7 @@ import oreoChess
 from oreoChess import OreoChess
 import openingBook
 
-Oreo = OreoChess(depth=6)
+Oreo = OreoChess(depth=2)
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
 MOVE_LOG_PANEL_WIDTH = 250
@@ -20,16 +20,15 @@ SQ_SIZE = BOARD_HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
-'''
-Initialize global directory of images
-'''
+
 def load_images():
+    '''
+    Initialize global directory of images
+    '''
     pieces = ['wp', 'wR', 'wN', 'wB', 'wQ', 'wK', 'bp', 'bR', 'bN', 'bB', 'bQ', 'bK']
     for piece in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load('images/' + piece + '.png'), (SQ_SIZE, SQ_SIZE))
 
-'''
-'''
 def main():
     p.init()
     screen = p.display.set_mode((BOARD_WIDTH + MOVE_LOG_PANEL_WIDTH, BOARD_HEIGHT))
@@ -41,6 +40,7 @@ def main():
     moveMade = False # flag variable for when a move is made
     load_images()
     running = True
+    options = True
     sqSelected = () # will keep track of last click of the user
     playerClicks = [] # keeps track of player clicks (two tuples: eg. [(6, 4), [4, 4]])
     gameOver = False
@@ -91,6 +91,23 @@ def main():
                     gs.checkmate = False
                     gs.stalemate = False
                     gameOver = False
+                if options:
+                    if e.key == p.K_q:
+                        playerOne = True
+                        playerTwo = True
+                        options = False
+                    elif e.key == p.K_w:
+                        playerOne = True
+                        playerTwo = False
+                        options = False
+                    elif e.key == p.K_e:
+                        playerOne = False
+                        playerTwo = True
+                        options = False
+                    elif e.key == p.K_r:
+                        playerOne = False
+                        playerTwo = False
+                        options = False
         # AI Movefinder
         if not gameOver and not humanTurn:
             AIMove = Oreo.findBestMove(gs, validMoves)
@@ -104,6 +121,9 @@ def main():
             moveMade = False
 
         drawGameState(screen, gs, validMoves, sqSelected, moveLogFont)
+        if options:
+            drawBoard(screen)
+            drawOptionsText(screen, text1="Press Q for two player", text2="Press W for White vs AI", text3="Press E for Black vs AI")
         if gs.checkmate or gs.stalemate:
             gameOver = True
             if gs.stalemate:
@@ -123,6 +143,8 @@ def drawGameState(screen, gs, validMoves, sqSelected, moveLogFont):
     highlightSquares(screen, gs, validMoves, sqSelected)
     drawPieces(screen, gs.board)
     drawMoveLog(screen, gs, moveLogFont)
+
+
 
 def drawBoard(screen):
     '''
@@ -188,6 +210,9 @@ def drawMoveLog(screen, gs, font):
 
 
 def drawEndGameText(screen, text):
+    '''
+    Function for drawing checkmate and stalemate text
+    '''
     font = p.font.SysFont("Helvitca", 32, True, False)
     textObject = font.render(text, 0, p.Color("Gray"))
     textLocation = p.Rect(0, 0, BOARD_WIDTH, BOARD_HEIGHT).move(
@@ -197,6 +222,31 @@ def drawEndGameText(screen, text):
     textObject = font.render(text, 0, p.Color("Black"))
     screen.blit(textObject, textLocation.move(2, 2))
 
-
+def drawOptionsText(screen, text1, text2, text3):
+    '''
+    Function for drawing options text
+    '''
+    font = p.font.SysFont("Helvitca", 32, True, False)
+    textObject1 = font.render(text1, 0, p.Color("Gray"))
+    textObject2 = font.render(text2, 0, p.Color("Gray"))
+    textObject3 = font.render(text3, 0, p.Color("Gray"))
+    textLocation1 = p.Rect(0, 0, BOARD_WIDTH, BOARD_HEIGHT).move(
+        BOARD_WIDTH / 2 - textObject1.get_width() / 2,
+        BOARD_HEIGHT * .25 - textObject1.get_height() / 2)
+    textLocation2 = p.Rect(0, 0, BOARD_WIDTH, BOARD_HEIGHT).move(
+        BOARD_WIDTH / 2 - textObject2.get_width() / 2,
+        BOARD_HEIGHT * .5 - textObject2.get_height() / 2)
+    textLocation3 = p.Rect(0, 0, BOARD_WIDTH, BOARD_HEIGHT).move(
+        BOARD_WIDTH / 2 - textObject3.get_width() / 2,
+        BOARD_HEIGHT * .75 - textObject3.get_height() / 2)
+    screen.blit(textObject1, textLocation1)
+    textObject1 = font.render(text1, 0, p.Color("Black"))
+    screen.blit(textObject1, textLocation1.move(2, 2))
+    screen.blit(textObject2, textLocation2)
+    textObject2 = font.render(text2, 0, p.Color("Black"))
+    screen.blit(textObject2, textLocation2.move(2, 2))
+    screen.blit(textObject3, textLocation3)
+    textObject3 = font.render(text3, 0, p.Color("Black"))
+    screen.blit(textObject3, textLocation3.move(2, 2))
 
 main()
