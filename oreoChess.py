@@ -78,7 +78,7 @@ class OreoChess:
         nextMove = None
         rnd.shuffle(validMoves)
         counter = 0
-        board_as_key = Repetoir.positionToKey(gs.board)
+        board_as_key = Repetoir.pos_to_key(gs.board)
         # findMinMaxMove(gs, validMoves, DEPTH, gs.whiteToMove)
         # findMoveNegamax(gs, validMoves, DEPTH, 1 if gs.whiteToMove else -1)
         if board_as_key in self.repetoir:
