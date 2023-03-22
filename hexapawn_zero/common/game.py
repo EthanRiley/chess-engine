@@ -10,8 +10,14 @@ class Board:
                       self.EMPTY, self.EMPTY, self.EMPTY,
                       self.EMPTY, self.EMPTY, self.EMPTY]
         
+        self.turn = self.WHITE
+
+        self.outputIndex = {}
+        self.legal_moves = None
+        
         # In the output index, the first number is the source square index
         # The second number is the destination square index
+        
 
         # White forward moves
         self.outputIndex["(6, 3)"] = 0
