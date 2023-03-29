@@ -1,7 +1,7 @@
 from common.game import Board
 import copy
 import numpy as np
-from minimax import minimax
+from minimax.minimax import minimax
 
 def getBestMoveRes(board):
     bestMove = None
