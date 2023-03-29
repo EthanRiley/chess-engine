@@ -1,6 +1,9 @@
 import random as rnd
 from openingBook import Repetoir
 from chessEngine import Move
+import numpy as np
+#import tensorflow as tf
+#from tensorflow import keras
 
 class OreoChess:
 
@@ -430,3 +433,14 @@ def scoreMaterial(board):
                 score -= pieceScore[square[1]]
 
     return score
+
+class HexaOreo():
+    def __init__(self):
+        model = keras.models.load_model('hexapawn_zero/supervised_model.keras')
+
+    def squareToIndex(self, r, c):
+        return r*3 + c - 1
+
+    def findEngineMove(self, gs):
+        network_output = self.model.predict(gs.toHexapawnNetworkInput())
+

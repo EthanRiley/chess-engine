@@ -450,28 +450,31 @@ class GameState():
 
     def toHexapawnNetworkInput(self):
         '''
-        Converts the current board to a 1D array of 9 values
+        Converts the current board to a 1D array of 21 values
+        The first 9 values represent the placement of whites pawns
+        The next 9 values represent the placement of black pawns
+        The last 3 values represent which players turn it is
         1 for each piece and 0 for empty spaces
         '''
-        input = []
+        networkInput = []
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 piece = self.board[r][c]
                 if piece == 'wP':
-                    input.append(1)
+                    networkInput.append(1)
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 piece = self.board[r][c]
                 if piece == 'bP':
-                    input.appen(1)
+                    networkInput.appen(1)
                 else:
-                    input.append(0)
-        for i in range(0, 1):
+                    networkInput.append(0)
+        for i in range(0, 3):
             if self.whiteToMove:
-                input.append(1)
+                networkInput.append(1)
             else:
-                input.append(0)
-        return input
+                networkInput.append(0)
+        return networkInput
 
 class Move():
     '''
