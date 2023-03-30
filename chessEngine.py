@@ -295,6 +295,7 @@ class GameState():
                         self.getQueenMoves(r, c, moves)
                     elif piece == 'K':
                         self.getKingMoves(r, c, moves)
+        #print(moves)
         return moves, pieces
     
 
@@ -462,11 +463,13 @@ class GameState():
                 piece = self.board[r][c]
                 if piece == 'wP':
                     networkInput.append(1)
+                else:
+                    networkInput.append(0)
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 piece = self.board[r][c]
                 if piece == 'bP':
-                    networkInput.appen(1)
+                    networkInput.append(1)
                 else:
                     networkInput.append(0)
         for i in range(0, 3):
@@ -538,6 +541,9 @@ class Move():
         if self.isCapture:
             moveString += "x"
         return moveString + endSquare
+    
+    def __repr__(self):
+        return self.__str__()
 
 
 class CastleRights:

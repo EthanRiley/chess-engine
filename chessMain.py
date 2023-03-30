@@ -7,10 +7,11 @@ from tkinter.tix import MAX
 import chessEngine
 import pygame as p
 import oreoChess
-from oreoChess import OreoChess
+from oreoChess import OreoChess, HexaOreo
 import openingBook
 
 Oreo = OreoChess(depth=2)
+LilOreo = HexaOreo()
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
 MOVE_LOG_PANEL_WIDTH = 250
@@ -69,7 +70,7 @@ def main():
                         playerClicks.append(sqSelected) # Save click into playerClicks list
                     if len(playerClicks) == 2:
                         move = chessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                        print(move.getChessNotation())
+                        
                         for i in range(len(validMoves)):
                             if move == validMoves[i]: # Only make move if it is valid
                                 gs.makeMove(validMoves[i])
@@ -113,8 +114,8 @@ def main():
                         playerTwo = False
                         options = False
                     elif e.key == p.K_h:
-                        playerOne = True
-                        playerTwo = True
+                        playerOne = False
+                        playerTwo = False
                         gameMode = HEXAPAWN
                         options = False
                         gs.toHexapawn()
@@ -122,10 +123,14 @@ def main():
                         # Draw the new hexapawn board
                         # Set options to false
         # AI Movefinder
-        if not gameOver and not humanTurn:
+        if not gameOver and not humanTurn and gs.gameMode == CHESS:
             AIMove = Oreo.findBestMove(gs, validMoves)
             if AIMove is None:
                 AIMove = Oreo.findRandomMove(validMoves)
+            gs.makeMove(AIMove)
+            moveMade = True
+        elif not gameOver and not humanTurn and gs.gameMode == HEXAPAWN:
+            AIMove = LilOreo.findBestMove(gs)
             gs.makeMove(AIMove)
             moveMade = True
 
