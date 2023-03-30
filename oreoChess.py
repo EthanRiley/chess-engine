@@ -1,6 +1,10 @@
 import random as rnd
 from openingBook import Repetoir
 from chessEngine import Move
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from hexapawn_zero.common.game import Board
 
 class OreoChess:
 
@@ -430,3 +434,66 @@ def scoreMaterial(board):
                 score -= pieceScore[square[1]]
 
     return score
+
+class HexaOreo():
+    def __init__(self):
+        self.model = keras.models.load_model('hexapawn_zero/supervised_model.keras')
+        self.outputIndex = {}
+        self.outputIndex["(6, 3)"] = 0
+        self.outputIndex["(7, 4)"] = 1
+        self.outputIndex["(8, 5)"] = 2
+        self.outputIndex["(3, 0)"] = 3
+        self.outputIndex["(4, 1)"] = 4
+        self.outputIndex["(5, 2)"] = 5
+
+        # black forward moves
+        self.outputIndex["(0, 3)"] = 6
+        self.outputIndex["(1, 4)"] = 7
+        self.outputIndex["(2, 5)"] = 8
+        self.outputIndex["(3, 6)"] = 9
+        self.outputIndex["(4, 7)"] = 10
+        self.outputIndex["(5, 8)"] = 11
+
+        # white capture moves
+        self.outputIndex["(6, 4)"] = 12
+        self.outputIndex["(7, 3)"] = 13
+        self.outputIndex["(7, 5)"] = 14
+        self.outputIndex["(8, 4)"] = 15
+        self.outputIndex["(3, 1)"] = 16
+        self.outputIndex["(4, 0)"] = 17
+        self.outputIndex["(4, 2)"] = 18
+        self.outputIndex["(5, 1)"] = 19
+
+        # black capture moves
+        self.outputIndex["(0, 4)"] = 20
+        self.outputIndex["(1, 3)"] = 21
+        self.outputIndex["(1, 5)"] = 22
+        self.outputIndex["(2, 4)"] = 23
+        self.outputIndex["(3, 7)"] = 24
+        self.outputIndex["(4, 6)"] = 25
+        self.outputIndex["(4, 8)"] = 26
+        self.outputIndex["(5, 7)"] = 27
+
+    def squareToIndex(self, r, c):
+        return r*3 + c
+    
+    def getNetworkOutputIndex(self, move):
+        move_key = (self.squareToIndex(move.startRow, move.startCol), self.squareToIndex(move.endRow, move.endCol))
+        return self.outputIndex[str(move_key)]
+
+    def findBestMove(self, gs):
+        network_output = self.model.predict(np.array([gs.toHexapawnNetworkInput()]))
+        masked_output = [0 for x in range(0, 28)]
+        moves = gs.getHexapawnMoves()
+        for move in moves:
+            moveIndex = self.getNetworkOutputIndex(move)
+            print(moveIndex)
+            masked_output[moveIndex] = network_output[0][0][moveIndex]
+            print(masked_output)
+        bestIdx = np.argmax(masked_output)
+        for move in moves:
+            if self.getNetworkOutputIndex(move) == bestIdx:
+                print(move)
+                return move
+
+
