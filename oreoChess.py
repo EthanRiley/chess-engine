@@ -487,13 +487,10 @@ class HexaOreo():
         moves = gs.getHexapawnMoves()
         for move in moves:
             moveIndex = self.getNetworkOutputIndex(move)
-            print(moveIndex)
             masked_output[moveIndex] = network_output[0][0][moveIndex]
-            print(masked_output)
         bestIdx = np.argmax(masked_output)
         for move in moves:
             if self.getNetworkOutputIndex(move) == bestIdx:
-                print(move)
                 return move
 
 

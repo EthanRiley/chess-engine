@@ -114,7 +114,7 @@ def main():
                         playerTwo = False
                         options = False
                     elif e.key == p.K_h:
-                        playerOne = False
+                        playerOne = True
                         playerTwo = False
                         gameMode = HEXAPAWN
                         options = False
