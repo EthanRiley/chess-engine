@@ -461,14 +461,14 @@ class GameState():
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 piece = self.board[r][c]
-                if piece == 'wP':
+                if piece == 'wp':
                     networkInput.append(1)
                 else:
                     networkInput.append(0)
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
                 piece = self.board[r][c]
-                if piece == 'bP':
+                if piece == 'bp':
                     networkInput.append(1)
                 else:
                     networkInput.append(0)
