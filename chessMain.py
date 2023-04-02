@@ -7,27 +7,32 @@ from tkinter.tix import MAX
 import chessEngine
 import pygame as p
 import oreoChess
-from oreoChess import OreoChess
+from oreoChess import OreoChess, HexaOreo
 import openingBook
 
 Oreo = OreoChess(depth=2)
+LilOreo = HexaOreo()
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
 MOVE_LOG_PANEL_WIDTH = 250
 MOVE_LOG_PANEL_HEIGHT = BOARD_HEIGHT
 DIMENSION = 8
+HEXAPAWN_DIMENSION = 3
+HEXAPAWN_SQ_SIZE = BOARD_HEIGHT // HEXAPAWN_DIMENSION
 SQ_SIZE = BOARD_HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
+HEXAPAWN = "HEXAPAWN"
+CHESS = "Chess"
 
-
-def load_images():
+def load_images(gameMode=None):
     '''
     Initialize global directory of images
     '''
+    sq_size = SQ_SIZE if gameMode is CHESS else HEXAPAWN_SQ_SIZE
     pieces = ['wp', 'wR', 'wN', 'wB', 'wQ', 'wK', 'bp', 'bR', 'bN', 'bB', 'bQ', 'bK']
     for piece in pieces:
-        IMAGES[piece] = p.transform.scale(p.image.load('images/' + piece + '.png'), (SQ_SIZE, SQ_SIZE))
+        IMAGES[piece] = p.transform.scale(p.image.load('images/' + piece + '.png'), (sq_size, sq_size))
 
 def main():
     p.init()
@@ -36,9 +41,7 @@ def main():
     screen.fill(p.Color('white'))
     moveLogFont = p.font.SysFont("Times New Roman", 15, False, False)
     gs = chessEngine.GameState()
-    validMoves = gs.getValidMoves()
     moveMade = False # flag variable for when a move is made
-    load_images()
     running = True
     options = True
     sqSelected = () # will keep track of last click of the user
@@ -46,8 +49,10 @@ def main():
     gameOver = False
     playerOne = True #If a Human is playing white, then this will be True. If an AI is playing, then false.
     playerTwo = True # If a Human is playing black, then this will be True. If an AI is playing, then false.
+    gameMode = "Chess"
 
     while running:
+        sq_size = SQ_SIZE if gameMode is CHESS else HEXAPAWN_SQ_SIZE
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -55,8 +60,8 @@ def main():
             elif e.type == p.MOUSEBUTTONDOWN: # When mouse is clicked
                 if not gameOver and humanTurn:
                     location = p.mouse.get_pos() # (x, y) location of the mouse
-                    col = location[0] // SQ_SIZE
-                    row = location[1] // SQ_SIZE
+                    col = location[0] // sq_size
+                    row = location[1] // sq_size
                     if sqSelected == (row, col) or col >= 8: # Clear clicks when the same square is clicked
                         sqSelected = ()
                         playerClicks = []
@@ -65,7 +70,7 @@ def main():
                         playerClicks.append(sqSelected) # Save click into playerClicks list
                     if len(playerClicks) == 2:
                         move = chessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                        print(move.getChessNotation())
+                        
                         for i in range(len(validMoves)):
                             if move == validMoves[i]: # Only make move if it is valid
                                 gs.makeMove(validMoves[i])
@@ -108,11 +113,24 @@ def main():
                         playerOne = False
                         playerTwo = False
                         options = False
+                    elif e.key == p.K_h:
+                        playerOne = True
+                        playerTwo = False
+                        gameMode = HEXAPAWN
+                        options = False
+                        gs.toHexapawn()
+                        # Erase the board
+                        # Draw the new hexapawn board
+                        # Set options to false
         # AI Movefinder
-        if not gameOver and not humanTurn:
+        if not gameOver and not humanTurn and gs.gameMode == CHESS:
             AIMove = Oreo.findBestMove(gs, validMoves)
             if AIMove is None:
                 AIMove = Oreo.findRandomMove(validMoves)
+            gs.makeMove(AIMove)
+            moveMade = True
+        elif not gameOver and not humanTurn and gs.gameMode == HEXAPAWN:
+            AIMove = LilOreo.findBestMove(gs)
             gs.makeMove(AIMove)
             moveMade = True
 
@@ -120,10 +138,13 @@ def main():
             validMoves = gs.getValidMoves()
             moveMade = False
 
-        drawGameState(screen, gs, validMoves, sqSelected, moveLogFont)
+        validMoves = gs.getValidMoves()
+        load_images(gameMode=gameMode)
+        drawGameState(screen, gs, validMoves, sqSelected, moveLogFont, gameMode=gameMode)
         if options:
             drawBoard(screen)
-            drawOptionsText(screen, text1="Press Q for two player", text2="Press W for White vs AI", text3="Press E for Black vs AI")
+            drawOptionsText(screen, text1="Press Q for two player", text2="Press W for White vs AI", text3="Press H for Hexapawn")
+        
         if gs.checkmate or gs.stalemate:
             gameOver = True
             if gs.stalemate:
@@ -135,16 +156,26 @@ def main():
         p.display.flip()
         
 
-def drawGameState(screen, gs, validMoves, sqSelected, moveLogFont):
+def drawGameState(screen, gs, validMoves, sqSelected, moveLogFont, gameMode="Chess"):
     '''
     draws squares on the board
     '''
-    drawBoard(screen)
-    highlightSquares(screen, gs, validMoves, sqSelected)
-    drawPieces(screen, gs.board)
+    if gameMode==HEXAPAWN:
+        drawHexapawn(screen)
+    else:
+        drawBoard(screen)
+    highlightSquares(screen, gs, validMoves, sqSelected, gameMode=gameMode)
+    drawPieces(screen, gs.board, gameMode=gameMode)
     drawMoveLog(screen, gs, moveLogFont)
 
-
+def eraseBoard(screen):
+    '''
+    Erases board of squares
+    '''
+    color = p.Color('white')
+    for r in range(DIMENSION):
+        for c in range(DIMENSION):
+            p.draw.rect(screen, color, p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 def drawBoard(screen):
     '''
@@ -156,31 +187,44 @@ def drawBoard(screen):
             color = colors[((r+c)%2)]
             p.draw.rect(screen, color, p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
-def highlightSquares(screen, gs, validMoves, sqSelected):
+def drawHexapawn(screen):
+    '''
+    Draws 3x3 board of squares
+    '''
+    colors = [p.Color('white'), p.Color('dark green')]
+    for r in range(HEXAPAWN_DIMENSION):
+        for c in range(HEXAPAWN_DIMENSION):
+            color = colors[((r+c)%2)]
+            p.draw.rect(screen, color, p.Rect(c*HEXAPAWN_SQ_SIZE, r*HEXAPAWN_SQ_SIZE, HEXAPAWN_SQ_SIZE, HEXAPAWN_SQ_SIZE))
+
+def highlightSquares(screen, gs, validMoves, sqSelected, gameMode=CHESS):
     '''
     Highlight squares when clicked
     '''
+    sq_size = SQ_SIZE if gameMode==CHESS else HEXAPAWN_SQ_SIZE
     if sqSelected != ():
         r, c = sqSelected
         if gs.board[r][c][0] == ('w' if gs.whiteToMove else 'b'):
-            s = p.Surface((SQ_SIZE, SQ_SIZE))
+            s = p.Surface((sq_size, sq_size))
             s.set_alpha(100)
             s.fill(p.Color('blue'))
-            screen.blit(s, (c*SQ_SIZE, r*SQ_SIZE))
+            screen.blit(s, (c*sq_size, r*sq_size))
             s.fill(p.Color('yellow'))
             for move in validMoves:
                 if move.startRow == r and move.startCol == c:
-                    screen.blit(s, (SQ_SIZE*move.endCol, SQ_SIZE*move.endRow))
+                    screen.blit(s, (sq_size*move.endCol, sq_size*move.endRow))
 
-def drawPieces(screen, board):
+def drawPieces(screen, board, gameMode=CHESS):
     '''
     Draw pieces from images folder
     '''
-    for r in range(DIMENSION):
-        for c in range(DIMENSION):
+    dimension = DIMENSION if gameMode==CHESS else HEXAPAWN_DIMENSION
+    sq_size = SQ_SIZE if gameMode==CHESS else HEXAPAWN_SQ_SIZE
+    for r in range(dimension):
+        for c in range(dimension):
             piece = board[r][c]
             if piece != '--':
-                screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                screen.blit(IMAGES[piece], p.Rect(c*sq_size, r*sq_size, sq_size, sq_size))
 
 def drawMoveLog(screen, gs, font):
     moveLogRect = p.Rect(BOARD_WIDTH, 0, MOVE_LOG_PANEL_WIDTH, MOVE_LOG_PANEL_HEIGHT)

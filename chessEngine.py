@@ -2,10 +2,11 @@
 Class responsible for storing information about state of chess game
 Determines valid moves at current position and keeps move log
 '''
-
+HEXAPAWN = "HEXAPAWN"
+CHESS = "Chess"
 
 class GameState():
-    def __init__(self):
+    def __init__(self, gameMode=CHESS):
         '''
         Board is an 8x8 2 dimensional list
         Each element of the list is 2 characters
@@ -13,6 +14,9 @@ class GameState():
         2nd Character represents piece type
         -- represents empty square
         '''
+
+        self.gameMode = gameMode
+        
         self.board = [
             ['bR', 'bN', 'bB', 'bQ', 'bK', 'bB', 'bN', 'bR'],
             ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
@@ -22,17 +26,19 @@ class GameState():
             ['--', '--', '--', '--', '--', '--', '--', '--'],
             ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
             ['wR', 'wN', 'wB', 'wQ', 'wK', 'wB', 'wN', 'wR']]
-        """
-        self.board = [
-            ['--', '--', '--', '--', 'bK', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', '--', '--', '--', '--'],
-            ['--', '--', '--', 'wp', '--', '--', '--', '--'],
-            ['--', '--', '--', '--', 'wK', '--', '--', '--']]
-        """
+
+        
+        self.hexapawnBoard = [
+            ['bp', 'bp', 'bp'],
+            ['--', '--', '--'],
+            ['wp', 'wp', 'wp']]
+        
+        self.gardnerBoard = [
+            ['bR', 'bN', 'bB', 'bQ', 'bK'],
+            ['bp', 'bp', 'bp', 'bp', 'bp'],
+            ['--', '--', '--', '--', '--'],
+            ['wp', 'wp', 'wp', 'wp', 'wp'],
+            ['wR', 'wN', 'wB', 'wQ', 'wK']]
 
         self.moveFunctions = {
             'p': self.getPawnMoves,
@@ -179,6 +185,12 @@ class GameState():
         Algorithm for checking moves
         Very slow, first place to make improvements
         '''
+        moveFunction = {CHESS: self.getChessMoves,
+                        HEXAPAWN: self.getHexapawnMoves,}
+        return moveFunction[self.gameMode]()
+
+    
+    def getChessMoves(self):
         tempEnpassantPossible = self.enpassantPossible
         tempCastleRights = CastleRights(self.currentCastlingRight.wks, self.currentCastlingRight.bks,
                                         self.currentCastlingRight.wqs, self.currentCastlingRight.bqs)
@@ -211,7 +223,30 @@ class GameState():
         self.enpassantPossible = tempEnpassantPossible
         self.currentCastlingRight = tempCastleRights
         return moves
+    
+    def getHexapawnMoves(self):
+        moves, pieces = self.getAllPossibleMoves()
+        for i in range(len(moves) - 1, -1, -1):
+            self.makeMove(moves[i])
+            self.undoMove()
+        if len(moves) == 0 or len(pieces) == 2:
+            self.checkmate = True
+        else:
+            self.checkmate = False
+            self.stalemate = False
+        
+        # Check if there is a queen on the board
+        if self.isQueen():
+            self.checkmate = True
+        return moves
 
+    def isQueen(self):
+        for row in self.board:
+            for column in row:
+                if column[1] == 'Q':
+                    return True
+        return False
+     
     def inCheck(self):
         '''
         Helper method for determinig if king is in check
@@ -260,7 +295,9 @@ class GameState():
                         self.getQueenMoves(r, c, moves)
                     elif piece == 'K':
                         self.getKingMoves(r, c, moves)
+        #print(moves)
         return moves, pieces
+    
 
     def getPawnMoves(self, r, c, moves):
         '''
@@ -271,14 +308,15 @@ class GameState():
                 # startSquare, endSquare, board
                 moves.append(Move((r, c), (r - 1, c), self.board))
                 # check if it possible to advance to squares in the first move
-                if r == 6 and self.board[r - 2][c] == "--":
-                    moves.append(Move((r, c), (r - 2, c), self.board))
+                if r-2 >= 0:
+                    if r == 6 and self.board[r - 2][c] == "--":
+                        moves.append(Move((r, c), (r - 2, c), self.board))
             if c - 1 >= 0:  # don't go outside the board from the left :)
                 if (self.board[r - 1][c - 1][0] == "b"):  # there's an enemy piece to capture
                     moves.append(Move((r, c), (r - 1, c - 1), self.board))
                 elif (r - 1, c - 1) == self.enpassantPossible:
                     moves.append(Move((r, c), (r - 1, c - 1), self.board, isEnpassantMove=True))
-            if c + 1 <= 7:  # don't go outside the board from the right :)
+            if c + 1 <= len(self.board[0])-1:  # don't go outside the board from the right :)
                 if (self.board[r - 1][c + 1][0] == "b"):  # there's an enemy piece to capture
                     moves.append(Move((r, c), (r - 1, c + 1), self.board))
                 elif (r - 1, c + 1) == self.enpassantPossible:
@@ -289,14 +327,15 @@ class GameState():
                 # startSquare, endSquare, board
                 moves.append(Move((r, c), (r + 1, c), self.board))
                 # check if it possible to advance to squares in the first move
-                if r == 1 and self.board[r + 2][c] == "--":
-                    moves.append(Move((r, c), (r + 2, c), self.board))
+                if r+2 <= len(self.board[0])-1:
+                    if r == 1 and self.board[r + 2][c] == "--":
+                        moves.append(Move((r, c), (r + 2, c), self.board))
             if c - 1 >= 0:  # don't go outside the board from the left :)
                 if (self.board[r + 1][c - 1][0] == "w"):  # there's an enemy piece to capture
                     moves.append(Move((r, c), (r + 1, c - 1), self.board))
                 elif (r + 1, c - 1) == self.enpassantPossible:
                     moves.append(Move((r, c), (r + 1, c - 1), self.board, isEnpassantMove=True))
-            if c + 1 <= 7:  # don't go outside the board from the right :)
+            if c + 1 <= len(self.board[0])-1:  # don't go outside the board from the right :)
                 if (self.board[r + 1][c + 1][0] == "w"):  # there's an enemy piece to capture
                     moves.append(Move((r, c), (r + 1, c + 1), self.board))
                 elif (r + 1, c + 1) == self.enpassantPossible:
@@ -309,7 +348,7 @@ class GameState():
         directions = ((-1, 0), (0, -1), (1, 0), (0, 1)) # Rooks can move up, down, left, and right
         enemyTeam = 'b' if self.whiteToMove else 'w' # Enemy pieces can be captured so need different logic for enemy pieces and friendly pieces
         for d in directions:
-            for i in range(1, 8):
+            for i in range(1, len(self.board)):
                 endRow = r + d[0] * i
                 endCol = c + d[1] * i
                 if 0 <= endRow < 8 and 0 <= endCol < 8: # Make sure move doesn't go off the board
@@ -332,10 +371,10 @@ class GameState():
         directions = ((-1, -1), (-1, 1), (1, -1), (1, 1)) # Bishops move diagonally
         enemyTeam = 'b' if self.whiteToMove else 'w'
         for d in directions:
-            for i in range(1, 8):
+            for i in range(1, len(self.board)):
                 endRow = r + d[0] * i
                 endCol = c + d[1] * i
-                if 0 <= endRow < 8 and 0 <= endCol < 8:
+                if 0 <= endRow < len(self.board) and 0 <= endCol < len(self.board):
                     endPiece = self.board[endRow][endCol]
                     if endPiece == "--":
                         moves.append(Move((r, c), (endRow, endCol), self.board))
@@ -356,7 +395,7 @@ class GameState():
         for j in jumps:
             endRow = r + j[0]
             endCol = c + j[1]
-            if 0 <= endRow < 8 and 0 <= endCol < 8:
+            if 0 <= endRow < len(self.board[0]) and 0 <= endCol < len(self.board[0]):
                 endPiece = self.board[endRow][endCol]
                 if endPiece[0] != allyTeam:
                     moves.append(Move((r, c), (endRow, endCol), self.board))
@@ -395,15 +434,55 @@ class GameState():
             self.getQueenSideCastleMoves(r, c, moves)
 
     def getKingsideCastleMoves(self, r, c, moves):
-        if self.board[r][c + 1] == '--' and self.board[r][c + 2] == '--':
-            if not self.squareUnderAttack(r, c + 1) and not self.squareUnderAttack(r, c + 2):
-                moves.append(Move((r, c), (r, c + 2), self.board, isCastleMove=True))
+        if c+2 <= len(self.board[0])-1:
+            if self.board[r][c + 1] == '--' and self.board[r][c + 2] == '--':
+                if not self.squareUnderAttack(r, c + 1) and not self.squareUnderAttack(r, c + 2):
+                    moves.append(Move((r, c), (r, c + 2), self.board, isCastleMove=True))
 
     def getQueenSideCastleMoves(self, r, c, moves):
-        if self.board[r][c - 1] == '--' and self.board[r][c - 2] == '--' and self.board[r][c - 3] == '--' and \
-                not self.squareUnderAttack(r, c - 1) and not self.squareUnderAttack(r, c - 2):
-            moves.append(Move((r, c), (r, c - 2), self.board, isCastleMove=True))
+        if c-3 >= 0:
+            if self.board[r][c - 1] == '--' and self.board[r][c - 2] == '--' and self.board[r][c - 3] == '--' and \
+                    not self.squareUnderAttack(r, c - 1) and not self.squareUnderAttack(r, c - 2):
+                moves.append(Move((r, c), (r, c - 2), self.board, isCastleMove=True))
 
+    def toHexapawn(self):
+        self.gameMode = HEXAPAWN
+        self.board = self.hexapawnBoard
+
+    def toHexapawnNetworkInput(self):
+        '''
+        Converts the current board to a 1D array of 21 values
+        The first 9 values represent the placement of whites pawns
+        The next 9 values represent the placement of black pawns
+        The last 3 values represent which players turn it is
+        1 for each piece and 0 for empty spaces
+        '''
+        networkInput = []
+        for r in range(len(self.board)):
+            for c in range(len(self.board[r])):
+                piece = self.board[r][c]
+                if piece == 'wp':
+                    networkInput.append(1)
+                else:
+                    networkInput.append(0)
+        for r in range(len(self.board)):
+            for c in range(len(self.board[r])):
+                piece = self.board[r][c]
+                if piece == 'bp':
+                    networkInput.append(1)
+                else:
+                    networkInput.append(0)
+        for i in range(0, 3):
+            if self.whiteToMove:
+                networkInput.append(1)
+            else:
+                networkInput.append(0)
+        return networkInput
+    
+    def setEmpty(self):
+        for r in range(len(self.board)):
+            for c in range(len(self.board[0])):
+                self.board[r][c] = '--'
 
 class Move():
     '''
@@ -427,7 +506,7 @@ class Move():
 
         # If a pawn makes it the last rank then it promotes
         self.isPawnPromotion = False
-        if (self.pieceMoved == 'wp' and self.endRow == 0) or (self.pieceMoved == 'bp' and self.endRow == 7):
+        if (self.pieceMoved == 'wp' and self.endRow == 0) or (self.pieceMoved == 'bp' and self.endRow == len(board)-1):
             self.isPawnPromotion = True
 
         # If a move is en passant than piece captured logic must change (it doesn't capture an empty square)
@@ -467,6 +546,9 @@ class Move():
         if self.isCapture:
             moveString += "x"
         return moveString + endSquare
+    
+    def __repr__(self):
+        return self.__str__()
 
 
 class CastleRights:
