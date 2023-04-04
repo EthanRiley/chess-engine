@@ -16,16 +16,18 @@ next 64 inputs is the position of the black bishops
 next 64 inputs is the position of the black rooks
 next 64 inputs is the position of the black queens
 next 64 inputs is the position of the black king
-A 64 by 64 matrix to represent if a position has been repeated
-A 64 by 64 matrix to represent if a position has been repeated twice
-An 8 by 8 matrix to represent white's kingside castliong rights
-an 8 by 8 matrix to represent white's queenside castling rights
-An 8 by 8 matrix to represent black's kingside castling rights
-an 8 by 8 matrix to represent black's queenside castling rights
-This is a total of 12 64 by 64 matrices, so 12 * 64 * 64 = 49152 inputs
+Next 64 inputs is whose turn it is
+if white to play, board is all 1s
+if black to play, board is all 0s
+Next board is whites kingside castling rights (1s if legal else 0)
+next board is whites queenside castling rights (1s if legal else 0)
+next board is blacks kingside castling rights (1s if legal else 0)
+next board is blacks queenside castling rights (1s if legal else 0)
+next board is a bitboard with an enpassant target square
+
 '''
 
-inp = Input(shape=(8,8,18))
+inp = Input(shape=(18,8,8))
 
 def residual_block(x, num_filters):
     res = x
@@ -57,7 +59,7 @@ policy_head = tf.keras.layers.Conv2D(filters=2, kernel_size=(1, 1), strides=(1, 
 policy_head = tf.keras.layers.BatchNormalization()(policy_head)
 policy_head = tf.keras.layers.Activation('relu')(policy_head)
 policy_head = tf.keras.layers.Flatten()(policy_head)
-policy_head = tf.keras.layers.Dense(units=num_legal_moves, activation='softmax', name='policy_output')(policy_head)
+policy_head = tf.keras.layers.Dense(units=1836, activation='softmax', name='policy_output')(policy_head)
 
 # Value head
 value_head = tf.keras.layers.Conv2D(filters=1, kernel_size=(1, 1), strides=(1, 1), padding='same')(x)
@@ -74,7 +76,8 @@ model = tf.keras.Model(inputs=inp, outputs=[policy_head, value_head])
 bce = tf.keras.losses.CategoricalCrossentropy(from_logits=False)
 model = Model(inp, [policy_head, value_head])
 model.compile(optimizer='SGD',
-              loss={'valueHead': 'mean_squared_error', 
-                    'policyHead': bce})
+              loss={'value_output': 'mean_squared_error', 
+                    'policy_output': bce})
 
-model.save('random_model.keras')
+model.save('random_chess_model.keras')
+# Why dont u recognize these changs
