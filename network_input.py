@@ -1,19 +1,21 @@
 from chessEngine import GameState, Move
+import json
 
 gs = GameState()
+gs.board = gs.emptyBoard
 
 move_indeces = {}
 counter = 0
-for r in range(len(gs.board)):
-    for c in range(len(gs.board[r])):
+for r in range(0, 8):
+    for c in range(0, 8):
         moves = []
         gs.getQueenMoves(r, c, moves)
         for m in moves:
             index = f'{r}{c}{m.endRow}{m.endCol}'
             move_indeces[index] = counter
             counter += 1
-for r in range(len(gs.board)):
-    for c in range(len(gs.board[r])):
+for r in range(0, 8):
+    for c in range(0, 8):
         moves = []
         gs.getKnightMoves(r, c, moves)
         for m in moves:
@@ -59,8 +61,8 @@ for r in range(len(gs.board)):
             index = f'{r}{c}{m.endRow}{m.endCol}Q'
             move_indeces[index] = counter
             counter += 1
-for r in range(len(gs.board)):
-    for c in range(len(gs.board[r])):
+for r in range(0, 8):
+    for c in range(0, 8):
         moves = []
         get_forward_promotion(r, c, moves)
         for m in moves:
@@ -68,6 +70,7 @@ for r in range(len(gs.board)):
             move_indeces[index] = counter
             counter += 1
 
+"""
 def get_enpassant_move(start_row, start_col, moves):
     if start_row == 3:
         if start_col - 1 >= 0:
@@ -88,6 +91,8 @@ for r in range(len(gs.board)):
             index = f'{r}{c}{m.endRow}{m.endCol}eP'
             move_indeces[index] = counter
             counter += 1
+"""
+"""
 castle_moves = ['O-O', 'O-O-O']
 for move in castle_moves:
     index = f'{move}w'
@@ -96,7 +101,11 @@ for move in castle_moves:
     index2 = f'{move}b'
     move_indeces[index2] = counter
     counter += 1
+"""
 
 
+
+with open("move_indeces.json", "w") as f:
+    json.dump(move_indeces, f)
 
 print(move_indeces)
