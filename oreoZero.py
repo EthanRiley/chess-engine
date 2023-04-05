@@ -15,24 +15,44 @@ class OreoZero:
         self.move_indeces = move_indeces
         self.depth = depth
 
+    def findBestMove(self, gs, dummy):
+        '''
+        Finds the best move for the given GameState object.
+        '''
+        network_output = self.model.predict(np.array([self.convert_game_state_to_input(gs)]))
+        masked_output = [0 for x in range(0, 1836)]
+        moves = gs.getChessMoves()
+        for move in moves:
+            move_index = self.get_network_output_index(move)
+            masked_output[move_index] = network_output[0][0][move_index]
+        best_move_index = np.argmax(masked_output)
+        for move in moves:
+            if self.get_network_output_index(move) == best_move_index:
+                return move
+
+
     def convert_game_state_to_input(self, gs):
         '''
         Converts a GameState object into a numpy array that can be fed into the neural network.
         '''
         board = gs.board
         bitboards = []
-        self.make_piece_input_layer(board, 'wp')
-        self.make_piece_input_layer(board, 'wN')
-        self.make_piece_input_layer(board, 'wB')
-        self.make_piece_input_layer(board, 'wR')
-        self.make_piece_input_layer(board, 'wQ')
-        self.make_piece_input_layer(board, 'wK')
-        self.make_piece_input_layer(board, 'bp')
-        self.make_piece_input_layer(board, 'bN')
-        self.make_piece_input_layer(board, 'bB')
-        self.make_piece_input_layer(board, 'bR')
-        self.make_piece_input_layer(board, 'bQ')
-        self.make_piece_input_layer(board, 'bK')
+        self.make_piece_input_layer(board, 'wp', bitboards)
+        self.make_piece_input_layer(board, 'wN', bitboards)
+        self.make_piece_input_layer(board, 'wB', bitboards)
+        self.make_piece_input_layer(board, 'wR', bitboards)
+        self.make_piece_input_layer(board, 'wQ', bitboards)
+        self.make_piece_input_layer(board, 'wK', bitboards)
+        self.make_piece_input_layer(board, 'bp', bitboards)
+        self.make_piece_input_layer(board, 'bN', bitboards)
+        self.make_piece_input_layer(board, 'bB', bitboards)
+        self.make_piece_input_layer(board, 'bR', bitboards)
+        self.make_piece_input_layer(board, 'bQ', bitboards)
+        self.make_piece_input_layer(board, 'bK', bitboards)
+        self.make_turn_input_layer(gs, bitboards)
+        self.make_castling_input_layer(gs, bitboards)
+        self.make_enpassant_input_layer(gs, bitboards)
+        return np.array(bitboards)
 
     def make_piece_input_layer(self, board, piece, bitboards):
         '''
@@ -88,5 +108,26 @@ class OreoZero:
         if gs.enpassantPossible != ():
             enpassant_input_layer[gs.enpassantPossible[0]][gs.enpassantPossible[1]] = 1
         bitboards.append(enpassant_input_layer)
+
+    def get_move_probs(self, gs):
+        '''
+        Returns a list of probabilities for each move in the given position.
+        '''
+        network_input = self.convert_game_state_to_input(gs)
+        network_input = np.array([network_input])
+        move_probs = self.model.predict(network_input)[0]
+        return move_probs
     
+    def get_network_output_index(self, move):
+        '''
+        Returns the index of the move in the neural network's output.
+        '''
+        index = f"{move.startRow}{move.startCol}{move.endRow}{move.endCol}"
+        if move.isPawnPromotion:
+            index += "Q"
+        return self.move_indeces[index]
+    
+    
+    
+
 
