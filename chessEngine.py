@@ -4,6 +4,8 @@ Determines valid moves at current position and keeps move log
 '''
 HEXAPAWN = "HEXAPAWN"
 CHESS = "Chess"
+WHITE = "WHITE"
+BLACK = "BLACK"
 
 class GameState():
     def __init__(self, gameMode=CHESS):
@@ -74,6 +76,7 @@ class GameState():
             self.currentCastlingRight.bks,
             self.currentCastlingRight.wqs,
             self.currentCastlingRight.bqs)]
+        self.winner = None
 
     def makeMove(self, move):
         '''
@@ -224,6 +227,10 @@ class GameState():
         if len(moves) == 0 or len(pieces) == 2:
             if self.inCheck():
                 self.checkmate = True
+                if self.whiteToMove:
+                    self.winner = WHITE
+                else:
+                    self.winner = BLACK
             else:
                 self.stalemate = True
         else:

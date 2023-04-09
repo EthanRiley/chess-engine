@@ -8,9 +8,11 @@ import chessEngine
 import pygame as p
 import oreoChess
 from oreoChess import OreoChess, HexaOreo
+from oreoZero import OreoZero
 import openingBook
 
-Oreo = OreoChess(depth=2)
+#Oreo = OreoChess(depth=2)
+Oreo = OreoZero(depth=2)
 LilOreo = HexaOreo()
 
 BOARD_WIDTH = BOARD_HEIGHT = 512
