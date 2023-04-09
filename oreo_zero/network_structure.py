@@ -48,7 +48,7 @@ x = tf.keras.layers.Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), padd
 x = tf.keras.layers.BatchNormalization()(x)
 x = tf.keras.layers.Activation('relu')(x)
 
-num_blocks = 5  # adjust this to the desired number of residual blocks
+num_blocks = 19  # adjust this to the desired number of residual blocks
 num_filters = 256
 for _ in range(num_blocks):
     x = residual_block(x, num_filters)
@@ -79,5 +79,5 @@ model.compile(optimizer='SGD',
               loss={'value_output': 'mean_squared_error', 
                     'policy_output': bce})
 
-model.save('random_chess_model.keras')
+model.save('random_chess_model_more_connections.keras')
 # Why dont u recognize these changs

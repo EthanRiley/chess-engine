@@ -11,7 +11,7 @@ OreoZero is a neural network trained from online master games to try and play th
 
 class OreoZero:
     def __init__(self, depth=3):
-        self.model = keras.models.load_model('oreo_zero/oreo_zero_v1.keras')
+        self.model = keras.models.load_model('oreo_zero/oreo_zero_v2.keras')
         self.move_indeces = move_indeces
         self.depth = depth
 
@@ -30,31 +30,32 @@ class OreoZero:
             if self.get_network_output_index(move) == best_move_index:
                 return move
 
-
-    def convert_game_state_to_input(self, gs):
+    @staticmethod
+    def convert_game_state_to_input(gs):
         '''
         Converts a GameState object into a numpy array that can be fed into the neural network.
         '''
         board = gs.board
         bitboards = []
-        self.make_piece_input_layer(board, 'wp', bitboards)
-        self.make_piece_input_layer(board, 'wN', bitboards)
-        self.make_piece_input_layer(board, 'wB', bitboards)
-        self.make_piece_input_layer(board, 'wR', bitboards)
-        self.make_piece_input_layer(board, 'wQ', bitboards)
-        self.make_piece_input_layer(board, 'wK', bitboards)
-        self.make_piece_input_layer(board, 'bp', bitboards)
-        self.make_piece_input_layer(board, 'bN', bitboards)
-        self.make_piece_input_layer(board, 'bB', bitboards)
-        self.make_piece_input_layer(board, 'bR', bitboards)
-        self.make_piece_input_layer(board, 'bQ', bitboards)
-        self.make_piece_input_layer(board, 'bK', bitboards)
-        self.make_turn_input_layer(gs, bitboards)
-        self.make_castling_input_layer(gs, bitboards)
-        self.make_enpassant_input_layer(gs, bitboards)
+        OreoZero.make_piece_input_layer(board, 'wp', bitboards)
+        OreoZero.make_piece_input_layer(board, 'wN', bitboards)
+        OreoZero.make_piece_input_layer(board, 'wB', bitboards)
+        OreoZero.make_piece_input_layer(board, 'wR', bitboards)
+        OreoZero.make_piece_input_layer(board, 'wQ', bitboards)
+        OreoZero.make_piece_input_layer(board, 'wK', bitboards)
+        OreoZero.make_piece_input_layer(board, 'bp', bitboards)
+        OreoZero.make_piece_input_layer(board, 'bN', bitboards)
+        OreoZero.make_piece_input_layer(board, 'bB', bitboards)
+        OreoZero.make_piece_input_layer(board, 'bR', bitboards)
+        OreoZero.make_piece_input_layer(board, 'bQ', bitboards)
+        OreoZero.make_piece_input_layer(board, 'bK', bitboards)
+        OreoZero.make_turn_input_layer(gs, bitboards)
+        OreoZero.make_castling_input_layer(gs, bitboards)
+        OreoZero.make_enpassant_input_layer(gs, bitboards)
         return np.array(bitboards)
 
-    def make_piece_input_layer(self, board, piece, bitboards):
+    @staticmethod
+    def make_piece_input_layer(board, piece, bitboards):
         '''
         Makes a layer of the neural network that represents a certain type of piece.
         '''
@@ -65,7 +66,8 @@ class OreoZero:
                     piece_input_layer[r][c] = 1
         bitboards.append(piece_input_layer)
 
-    def make_turn_input_layer(self, gs, bitboards):
+    @staticmethod
+    def make_turn_input_layer(gs, bitboards):
         '''
         Makes a layer of the neural network that represents whose turn it is.
         '''
@@ -75,7 +77,8 @@ class OreoZero:
             turn_input_layer = np.zeros((8, 8))
         bitboards.append(turn_input_layer)
 
-    def make_castling_input_layer(self, gs, bitboards):
+    @staticmethod
+    def make_castling_input_layer(gs, bitboards):
         '''
         Makes a layer of the neural network that represents which castling rights are available.
         '''
@@ -100,7 +103,8 @@ class OreoZero:
             bqs_input_layer = np.zeros((8, 8))
         bitboards.append(bqs_input_layer)
     
-    def make_enpassant_input_layer(self, gs, bitboards):
+    @staticmethod
+    def make_enpassant_input_layer(gs, bitboards):
         '''
         Makes a layer of the neural network that represents which squares are en passant squares.
         '''
@@ -108,7 +112,7 @@ class OreoZero:
         if gs.enpassantPossible != ():
             enpassant_input_layer[gs.enpassantPossible[0]][gs.enpassantPossible[1]] = 1
         bitboards.append(enpassant_input_layer)
-
+    
     def get_move_probs(self, gs):
         '''
         Returns a list of probabilities for each move in the given position.
